@@ -1,6 +1,8 @@
 import argparse
 import os
 import sys
+from pathlib import Path
+sys.path.append(str(Path.home() / "PartCrafter"))
 from glob import glob
 import time
 from typing import Any, Union
