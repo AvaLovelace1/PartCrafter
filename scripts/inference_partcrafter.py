@@ -96,21 +96,28 @@ def main() -> None:
     # init tripoSG pipeline
     pipe: PartCrafterPipeline = PartCrafterPipeline.from_pretrained(partcrafter_weights_dir).to(device, dtype)
 
-    set_seed(args.seed)
-    infer(args, pipe, rmbg_net, device=device, dtype=dtype)
+    if os.path.isdir(args.image_path):
+        image_paths = sorted(glob(os.path.join(args.image_path, "*.jpg")) + glob(os.path.join(args.image_path, "*.png")) + glob(os.path.join(args.image_path, "*.jpeg")))
+    else:
+        image_paths = [args.image_path]
+
+    for image_path in image_paths:
+        infer(image_path, args, pipe, rmbg_net, device=device, dtype=dtype)
 
 
 def infer(
+    image_path: str,
     args,
     pipe: PartCrafterPipeline,
     rmbg_net: BriaRMBG,
     device: str = "cuda",
     dtype: torch.dtype = torch.float16
 ) -> None:
+    set_seed(args.seed)
     # run inference
     outputs, processed_image = run_triposg(
         pipe,
-        image_input=args.image_path,
+        image_input=image_path,
         num_parts=args.num_parts,
         rmbg_net=rmbg_net,
         seed=args.seed,
@@ -126,11 +133,9 @@ def infer(
 
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
-    
-    if args.tag is None:
-        args.tag = time.strftime("%Y%m%d_%H_%M_%S")
-    
-    export_dir = os.path.join(args.output_dir, args.tag)
+
+    tag = Path(image_path).stem if args.tag is None else args.tag
+    export_dir = os.path.join(args.output_dir, tag)
     os.makedirs(export_dir, exist_ok=True)
 
     for i, mesh in enumerate(outputs):
