@@ -62,7 +62,7 @@ def run_triposg(
 
 MAX_NUM_PARTS = 16
 
-if __name__ == "__main__":
+def main() -> None:
     device = "cuda"
     dtype = torch.float16
 
@@ -97,7 +97,16 @@ if __name__ == "__main__":
     pipe: PartCrafterPipeline = PartCrafterPipeline.from_pretrained(partcrafter_weights_dir).to(device, dtype)
 
     set_seed(args.seed)
+    infer(args, pipe, rmbg_net, device=device, dtype=dtype)
 
+
+def infer(
+    args,
+    pipe: PartCrafterPipeline,
+    rmbg_net: BriaRMBG,
+    device: str = "cuda",
+    dtype: torch.dtype = torch.float16
+) -> None:
     # run inference
     outputs, processed_image = run_triposg(
         pipe,
@@ -175,4 +184,8 @@ if __name__ == "__main__":
         rendered_normal.save(os.path.join(export_dir, "rendering_normal.png"))
         rendered_grid.save(os.path.join(export_dir, "rendering_grid.png"))
         print("Rendering done.")
+
+
+if __name__ == "__main__":
+    main()
 
