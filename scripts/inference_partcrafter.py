@@ -6,6 +6,7 @@ sys.path.append(str(Path.home() / "PartCrafter"))
 from glob import glob
 import time
 from typing import Any, Union
+import json
 
 import numpy as np
 import torch
@@ -68,7 +69,7 @@ def main() -> None:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--image_path", type=str, required=True)
-    parser.add_argument("--num_parts", type=int, required=True, help="number of parts to generate")
+    parser.add_argument("--num_parts", type=str, required=True, help="number of parts to generate")
     parser.add_argument("--output_dir", type=str, default="./results")
     parser.add_argument("--tag", type=str, default=None)
     parser.add_argument("--seed", type=int, default=0)
@@ -80,8 +81,6 @@ def main() -> None:
     parser.add_argument("--rmbg", action="store_true")
     parser.add_argument("--render", action="store_true")
     args = parser.parse_args()
-
-    assert 1 <= args.num_parts <= MAX_NUM_PARTS, f"num_parts must be in [1, {MAX_NUM_PARTS}]"
 
     # download pretrained weights
     partcrafter_weights_dir = "pretrained_weights/PartCrafter"
@@ -101,24 +100,33 @@ def main() -> None:
     else:
         image_paths = [args.image_path]
 
+    if os.path.isfile(args.num_parts):
+        with open(args.num_parts, "r") as f:
+            num_parts_dict = json.load(f)
+    else:
+        num_parts_dict = {args.image_path: int(args.num_parts)}
+
     for image_path in image_paths:
-        infer(image_path, args, pipe, rmbg_net, device=device, dtype=dtype)
+        infer(image_path, num_parts_dict[image_path], args, pipe, rmbg_net, device=device, dtype=dtype)
 
 
 def infer(
     image_path: str,
+    num_parts: int,
     args,
     pipe: PartCrafterPipeline,
     rmbg_net: BriaRMBG,
     device: str = "cuda",
-    dtype: torch.dtype = torch.float16
+    dtype: torch.dtype = torch.float16,
 ) -> None:
     set_seed(args.seed)
+    assert 1 <= num_parts <= MAX_NUM_PARTS, f"num_parts must be in [1, {MAX_NUM_PARTS}]"
+
     # run inference
     outputs, processed_image = run_triposg(
         pipe,
         image_input=image_path,
-        num_parts=args.num_parts,
+        num_parts=num_parts,
         rmbg_net=rmbg_net,
         seed=args.seed,
         num_tokens=args.num_tokens,
