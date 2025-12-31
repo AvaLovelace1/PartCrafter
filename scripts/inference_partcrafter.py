@@ -96,7 +96,7 @@ def main() -> None:
     pipe: PartCrafterPipeline = PartCrafterPipeline.from_pretrained(partcrafter_weights_dir).to(device, dtype)
 
     if os.path.isdir(args.image_path):
-        image_paths = sorted([str(os.path.join(args.image_input, f)) for f in os.listdir(args.image_input) if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+        image_paths = sorted([str(os.path.join(args.image_path, f)) for f in os.listdir(args.image_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
     else:
         image_paths = [args.image_path]
 
