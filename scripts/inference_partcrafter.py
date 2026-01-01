@@ -107,7 +107,7 @@ def main() -> None:
         num_parts_dict = {args.image_path: int(args.num_parts)}
 
     for image_path in image_paths:
-        infer(image_path, num_parts_dict[image_path], args, pipe, rmbg_net, device=device, dtype=dtype)
+        infer(image_path, num_parts_dict[os.path.basename(image_path)], args, pipe, rmbg_net, device=device, dtype=dtype)
 
 
 def infer(
